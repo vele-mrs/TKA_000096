@@ -1,0 +1,6 @@
+__pycache__/
+_old/
+data/Scraper/soup
+module/__pycashe__
+dist/
+system.log
