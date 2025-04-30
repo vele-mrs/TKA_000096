@@ -1,105 +1,87 @@
+###############################################################################
+## Python Version             | 3.13.1
+## Author                     | Vele
+###############################################################################
+
+## Library
+import sys
+import os
+import configparser
+import shutil
+from datetime import datetime, timedelta
+
+# Data
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# フィギュアサイズはアスペクトに合わせて適当に調整
-fig, ax = plt.subplots(figsize=(16, 9))
+# User Library
+sys.path.append("C:/workspace/projects/development/_library/python")
+from user_print import advanceprint, progress_print, save_log # type: ignore
+from user_timestamp import TimeStamp # type: ignore
+from user_data import set_filepath # type: ignore
 
-# 軸設定
-ax.set_xlim(-3840, 3840)
-ax.set_ylim(0, 2160)
-ax.set_aspect('equal')
+# User Module
+sys.path.append(os.path.join(os.path.dirname(__file__), "module"))
+from workspace import WorkSpace # type: ignore
 
-# 上下反転（画面っぽいY軸）
-ax.invert_yaxis()
+###############################################################################
+## PARAMETER
 
-# グリッド設定（240ピクセル刻み）
-x_ticks = list(range(-3840, 3841, 240))
-y_ticks = list(range(0, 2161, 240))
+# Initialize
+PHASE = 0
 
-ax.set_xticks(x_ticks)
-ax.set_yticks(y_ticks)
-ax.grid(True, which='both', linestyle='--', color='gray', linewidth=0.5)
+# config.iniファイルの読み込み
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-# 横軸のラベルを30度傾ける
-ax.set_xticklabels(x_ticks, rotation=30)
+# TimeStampの読み込み
+ts = TimeStamp()
+yyyymmdd_today = ts.yyyymmdd_today()
+yyyymmdd_yesterday = ts.yyyymmdd_yesterday()
 
-# 横軸を上側に移動
-ax.xaxis.set_ticks_position('top')  # 横軸の位置を上側に設定
+## ------------------------------------------------------------------------- ##
+##                                                                           ##
+##      `7MMM.     ,MMF'      db      `7MMF'`7MN.   `7MF'                    ## 
+##        MMMb    dPMM       ;MM:       MM    MMN.    M                      ## 
+##        M YM   ,M MM      ,V^MM.      MM    M YMb   M                      ## 
+##        M  Mb  M' MM     ,M  `MM      MM    M  `MN. M                      ## 
+##        M  YM.P'  MM     AbmmmqMA     MM    M   `MM.M                      ## 
+##        M  `YM'   MM    A'     VML    MM    M     YMM                      ## 
+##      .JML. `'  .JMML..AMA.   .AMMA..JMML..JML.    YM                      ## 
+##                                                                           ##
+## ------------------------------------------------------------------------- ##
+## Main
+if __name__ == "__main__":
 
-# 軸のラベルを追加（オプション）
-ax.set_xlabel("X (pixels)")
-ax.set_ylabel("Y (pixels)")
-plt.title("Custom Workspace Grid (3840x2160, 240px step)")
-
-
-
-
-
-# (0, 0) ~ (3840, 240) の位置に枠を描き、トラテープパターンで塗りつぶし（太いスラッシュ模様）
-rect = patches.Rectangle((0, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-ax.add_patch(rect)
-
-rect = patches.Rectangle((-3840, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-ax.add_patch(rect)
-
-rect = patches.Rectangle((0, 0), 70, 2160-50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-ax.add_patch(rect)
-
-rect = patches.Rectangle((0, 2160-50), 3840, 50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-ax.add_patch(rect)
+    # [INFO]  - * - * - * - * - * - * - * - * - * - 
+    progress_print("start", os.path.abspath(__file__))
+    
 
 
 
+    # --------------------------------------------------------------------------------
+    # [INFO] Phase : X - NotionClient : Get Database and convert csv and df
+    # 
+    PHASE += 1
+    progress_print("phase", f"{PHASE} - NotionClient : Get Database and convert csv and df")
+    save_log(level="INFO", comment=f"{os.path.abspath(__file__)} -> PHASE{PHASE}")
 
 
 
+    # [INFO] - * - * - * - * - * - * - * - * - * - 
+    progress_print("end", os.path.basename(__file__))
+
+
+    # Notion Client
+    ws = WorkSpace(
+        data = 1
+        )
+
+    # APIキーを取得
+    ws.show()
+    advanceprint('INFO', None, f"Successfully get my integrate")
 
 
 
-
-
-
-
-
-
-
-# モニタ枠線を引く
-rect = patches.Rectangle((0, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
-ax.add_patch(rect)
-
-rect = patches.Rectangle((-3840, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
-ax.add_patch(rect)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# (300, 300) ~ (600, 600) の位置に枠を描く
-rect_window1 = patches.Rectangle((300, 300), 300, 300, linewidth=2, edgecolor='black', facecolor='none')
-ax.add_patch(rect_window1)
-
-# (300, 300) ~ (600, 600) の中心に "Window1" ラベルを追加
-ax.text(450, 450, 'Window1', color='black', ha='center', va='center', fontsize=12)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-plt.show()
+    # [INFO] - * - * - * - * - * - * - * - * - * - 
+    progress_print("end", os.path.basename(__file__))
