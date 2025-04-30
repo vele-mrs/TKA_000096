@@ -55,8 +55,9 @@ class WorkSpace:
     def __init__(self):
         pass
 
-
-    def generate_area(self):
+    ############################################################
+    # 描画エリア設定メソッド
+    def set_view_area(self):
         # フィギュアサイズはアスペクトに合わせて適当に調整
         fig, self.ax = plt.subplots(figsize=(16, 9))
 
@@ -69,8 +70,8 @@ class WorkSpace:
         self.ax.invert_yaxis()
 
         # グリッド設定（240ピクセル刻み）
-        x_ticks = list(range(-3840, 3841, 240))
-        y_ticks = list(range(0, 2161, 240))
+        x_ticks = list(range(-3840, 3840, 240))
+        y_ticks = list(range(0, 2160, 240))
 
         self.ax.set_xticks(x_ticks)
         self.ax.set_yticks(y_ticks)
@@ -88,8 +89,20 @@ class WorkSpace:
         plt.title("Custom Workspace Grid (3840x2160, 240px step)")
 
 
+    ############################################################
+    # モニタ領域設定メソッド
+    def set_monitor_area(self):
 
-    def restricted_zone(self):
+        # モニタ枠線を引く
+        rect = patches.Rectangle((0, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
+        self.ax.add_patch(rect)
+
+        rect = patches.Rectangle((-3840, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
+        self.ax.add_patch(rect)
+
+    ############################################################
+    # 禁止エリア設定メソッド
+    def set_restricted_area(self):
 
         # (0, 0) ~ (3840, 240) の位置に枠を描き、トラテープパターンで塗りつぶし（太いスラッシュ模様）
         rect = patches.Rectangle((0, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
@@ -104,13 +117,15 @@ class WorkSpace:
         rect = patches.Rectangle((0, 2160-50), 3840, 50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
         self.ax.add_patch(rect)
 
-        # モニタ枠線を引く
-        rect = patches.Rectangle((0, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
-        self.ax.add_patch(rect)
 
-        rect = patches.Rectangle((-3840, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
-        self.ax.add_patch(rect)
+    ############################################################
+    # ワークスペースメソッド
 
+
+
+    ############################################################
+    # ワークスペース設定メソッド
+    def set_workspace_area(self):
         # (300, 300) ~ (600, 600) の位置に枠を描く
         rect_window1 = patches.Rectangle((300, 300), 300, 300, linewidth=2, edgecolor='black', facecolor='none')
         self.ax.add_patch(rect_window1)
@@ -119,6 +134,8 @@ class WorkSpace:
         self.ax.text(450, 450, 'Window2', color='black', ha='center', va='center', fontsize=12)
 
 
+    ############################################################
+    # ワークスペース保存メソッド
     def save_workspace_png(self, num):
 
         # グラフを保存
@@ -153,15 +170,26 @@ if __name__ == "__main__":
     # Notion Client
     ws = WorkSpace()
 
-    # 
-    ws.generate_area()
-    advanceprint('INFO', None, f"Successfully Ganerate Graph")
+    # グラフエリアを生成
+    ws.set_view_area()
+    advanceprint('INFO', None, f"Successfully set_view_area")
 
-    ws.restricted_zone()
-    advanceprint('INFO', None, f"Successfully Ganerate Graph")
+    # モニタエリアを指定
+    ws.set_monitor_area()
+    advanceprint('INFO', None, f"Successfully set_monitor_area")
 
+    # 禁止エリアを指定
+    ws.set_restricted_area()
+    advanceprint('INFO', None, f"Successfully set_restricted_area")
+
+
+    # ワークスペースを指定
+    ws.set_workspace_area()
+    advanceprint('INFO', None, f"Successfully set_workspace_area")
+
+    # ワークスペースを保存
     ws.save_workspace_png(1)
-    advanceprint('INFO', None, f"Successfully Save Graph")
+    advanceprint('INFO', None, f"Successfully save_workspace_png")
 
     # [INFO] - * - * - * - * - * - * - * - * - * - 
     progress_print("end", os.path.basename(__file__))
