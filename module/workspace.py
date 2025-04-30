@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 # Data
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import pandas as pd
 
 # User Library
 sys.path.append("C:/workspace/projects/development/_library/python")
@@ -55,6 +56,14 @@ class WorkSpace:
     def __init__(self):
         pass
 
+
+    ############################################################
+    # 描画エリアをクリアするメソッド
+    def clear_view_area(self):
+        if hasattr(self, 'ax'):
+            self.ax.cla()  # 軸内をクリア（グリッドや描画された線など）
+            self.set_view_area()  # 軸設定を再適用
+
     ############################################################
     # 描画エリア設定メソッド
     def set_view_area(self):
@@ -70,8 +79,8 @@ class WorkSpace:
         self.ax.invert_yaxis()
 
         # グリッド設定（240ピクセル刻み）
-        x_ticks = list(range(-3840, 3840, 240))
-        y_ticks = list(range(0, 2160, 240))
+        x_ticks = list(range(-3840, 3840+1, 240))
+        y_ticks = list(range(0, 2160+1, 240))
 
         self.ax.set_xticks(x_ticks)
         self.ax.set_yticks(y_ticks)
@@ -100,10 +109,88 @@ class WorkSpace:
         rect = patches.Rectangle((-3840, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
         self.ax.add_patch(rect)
 
+
+
+
+    ############################################################
+    # CSV Readメソッド
+    def read_csv(self):
+        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.num, "csv")
+        self.df = pd.read_csv(filepath)
+
+    ############################################################
+    # CSV Writeメソッド
+    def write_csv(self):
+        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.num, "csv")
+        self.df.to_csv(filepath, index=False)
+
+
+
+
+
+
+
+
     ############################################################
     # 禁止エリア設定メソッド
     def set_restricted_area(self):
 
+        self.filename = "restricted_area"
+        self.num = 0
+        self.read_csv()
+        print(self.df)
+
+        self.df['x'] = 1
+        self.df['y'] = 1
+        self.df['width'] = 1
+        self.df['high'] = 1
+        self.write_csv()
+
+
+        
+
+        # エリアを設定
+        self.x1 = 100
+        self.y1 = 100
+        self.x2 = 500
+        self.y2 = 500
+        self.xpadding = 0
+        self.ypadding = 0
+
+        # x,y,width,hightを生成
+        self.make_rectangle()
+
+        print(self.x     )
+        print(self.y     )
+        print(self.width )
+        print(self.height)
+
+
+        self.set_restricted_area_single()
+
+    ############################################################
+    # 禁止エリア設定メソッド
+    def set_restricted_area_single(self):
+        # トラテープ部の設定
+        linewidth   = 2
+        facecolor   = 'yellow'
+        alpha       = 0.5
+        hatch       = '/////'
+
+        # rectangle
+        rect = patches.Rectangle(
+            (self.x, self.y), 
+            self.width, 
+            self.height, 
+            linewidth=linewidth, 
+            facecolor=facecolor, 
+            alpha=alpha, 
+            hatch=hatch
+            )
+        self.ax.add_patch(rect)
+
+
+    def set_restricted_area_single_old(self):
         # (0, 0) ~ (3840, 240) の位置に枠を描き、トラテープパターンで塗りつぶし（太いスラッシュ模様）
         rect = patches.Rectangle((0, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
         self.ax.add_patch(rect)
@@ -117,6 +204,14 @@ class WorkSpace:
         rect = patches.Rectangle((0, 2160-50), 3840, 50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
         self.ax.add_patch(rect)
 
+
+    ############################################################
+    # (x1,y1),(x2,y2)から(x,y), width, highを生成するメソッド
+    def make_rectangle(self):
+        self.x      = min(self.x1 , self.x2) + self.xpadding
+        self.y      = min(self.y1 , self.y2) + self.ypadding
+        self.width  = abs(self.x2 - self.x1) - self.xpadding
+        self.height = abs(self.y2 - self.y1) - self.ypadding
 
     ############################################################
     # ワークスペースメソッド
@@ -169,6 +264,10 @@ if __name__ == "__main__":
 
     # Notion Client
     ws = WorkSpace()
+
+    # グラフエリアを初期化
+    ws.clear_view_area()
+    advanceprint('INFO', None, f"Successfully clear_view_area")
 
     # グラフエリアを生成
     ws.set_view_area()
