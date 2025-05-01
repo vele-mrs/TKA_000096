@@ -67,6 +67,65 @@ class WorkSpace:
             self.ax.cla()  # 軸内をクリア（グリッドや描画された線など）
             self.set_view_area()  # 軸設定を再適用
 
+
+
+    ############################################################
+    # エリア描画メソッド
+    def draw_area(self):
+
+
+        # .csvファイルの読み出し
+        for filename in os.listdir(r"data/Workspace"):
+            if filename.endswith('.csv'):
+                self.filename, self.filenum = os.path.splitext(filename)[0].split('.')
+                # 描画エリアの呼び出し
+                self.set_view_area()
+
+                # self.filename = "restricted_area"
+                # self.filenum = 0
+                self.load_csv()
+                advanceprint('INFO', None, f"Successfully Load {self.filename}.{self.filenum}.csv")
+  
+                for index, row in self.df.iterrows():
+                    # advanceprint('INFO', ('row', row))
+
+                    self.type = row['type']
+                    self.name = row['name']
+                    self.x1 = row['x1']
+                    self.x2 = row['x2']
+                    self.y1 = row['y1']
+                    self.y2 = row['y2']
+                    self.xp = row['xp']
+                    self.yp = row['yp']
+
+                    # x,y,width,hightを生成
+                    self.make_rectangle()
+
+                    self.df.loc[index, 'x'] = int(self.x)
+                    self.df.loc[index, 'y'] = int(self.y)
+                    self.df.loc[index, 'w'] = int(self.w)
+                    self.df.loc[index, 'h'] = int(self.h)
+
+                    # モニタ枠線を描画する
+                    if self.type=="frame":
+                        self.set_frame()
+
+                    # 禁止エリアを描画する
+                    elif self.type=="redzone":
+                        self.set_redzone()
+
+                    # ウィンドウエリアを描画する
+                    elif self.type=="window":
+                        self.set_window()
+
+                # print(self.df)
+
+                # データを保存する
+                self.save_csv()
+                self.save_png()
+                advanceprint('INFO', None, f"Successfully Save {self.filename}.{self.filenum}.csv")
+
+
     ############################################################
     # 描画エリア設定メソッド
     def set_view_area(self):
@@ -98,56 +157,6 @@ class WorkSpace:
         # 軸のラベルを追加（オプション）
         self.ax.set_xlabel("X (pixels)")
         self.ax.set_ylabel("Y (pixels)")
-
-
-    ############################################################
-    # エリア描画メソッド
-    def draw_area(self):
-
-        self.filename = "restricted_area"
-        self.num = 0
-        self.read_csv()
-
-
-        print(self.df)
-  
-        for index, row in self.df.iterrows():
-            # advanceprint('INFO', ('row', row))
-
-            self.type = row['type']
-            self.name = row['name']
-            self.x1 = row['x1']
-            self.x2 = row['x2']
-            self.y1 = row['y1']
-            self.y2 = row['y2']
-            self.xp = row['xp']
-            self.yp = row['yp']
-            
-            # x,y,width,hightを生成
-            self.make_rectangle()
-
-            self.df.loc[index, 'x'] = int(self.x)
-            self.df.loc[index, 'y'] = int(self.y)
-            self.df.loc[index, 'w'] = int(self.w)
-            self.df.loc[index, 'h'] = int(self.h)
-
-            # モニタ枠線を描画する
-            if self.type=="frame":
-                self.set_frame()
-
-            # 禁止エリアを描画する
-            elif self.type=="redzone":
-                self.set_redzone()
-
-            # ウィンドウエリアを描画する
-            elif self.type=="window":
-                self.set_window()
-
-        print(self.df)
-
-        # データを保存する
-        self.write_csv()
-
 
     ############################################################
     # モニタ枠線設定メソッド
@@ -258,19 +267,6 @@ class WorkSpace:
     #     self.ax.text(450, 450, 'Window2', color='black', ha='center', va='center', fontsize=12)
 
 
-    ############################################################
-    # ワークスペース保存メソッド
-    def save_workspace_png(self, num):
-
-
-        plt.title(self.filename)
-
-        # グラフを保存
-        filepath = set_filepath(["data", "WorkSpace"], "workspace", num, "png")
-        plt.savefig(filepath, bbox_inches='tight', dpi=300)
-
-
-
 
     ############################################################
     # (x1,y1),(x2,y2)から(x,y), width, highを生成するメソッド
@@ -281,16 +277,32 @@ class WorkSpace:
         self.h = abs(self.y2 - self.y1) - self.yp
 
     ############################################################
-    # CSV Readメソッド
-    def read_csv(self):
-        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.num, "csv")
+    # CSV Loadメソッド
+    def load_csv(self):
+        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.filenum, "csv")
         self.df = pd.read_csv(filepath)
 
     ############################################################
-    # CSV Writeメソッド
-    def write_csv(self):
-        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.num, "csv")
+    # CSV Saveメソッド
+    def save_csv(self):
+        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.filenum, "csv")
         self.df.to_csv(filepath, index=False)
+
+
+    ############################################################
+    # ワークスペース保存メソッド
+    def save_png(self):
+
+        # タイトルを表示
+        plt.title(self.filename)
+
+        # グラフを保存
+        filepath = set_filepath(["data", "WorkSpace"], self.filename, self.filenum, "png")
+        plt.savefig(filepath, bbox_inches='tight', dpi=300)
+        plt.clf()   # 現在の図をクリア（figure全体を消去）
+
+
+
 
 
 
@@ -330,8 +342,8 @@ if __name__ == "__main__":
     advanceprint('INFO', None, f"Successfully clear_view_area")
 
     # グラフエリアを生成
-    ws.set_view_area()
-    advanceprint('INFO', None, f"Successfully set_view_area")
+    # ws.set_view_area()
+    # advanceprint('INFO', None, f"Successfully set_view_area")
 
     # モニタエリアを指定
     # ws.set_monitor_area()
@@ -343,8 +355,8 @@ if __name__ == "__main__":
 
 
     # ワークスペースを保存
-    ws.save_workspace_png(1)
-    advanceprint('INFO', None, f"Successfully save_workspace_png")
+    # ws.save_workspace_png(1)
+    # advanceprint('INFO', None, f"Successfully save_workspace_png")
 
     # [INFO] - * - * - * - * - * - * - * - * - * - 
     progress_print("end", os.path.basename(__file__))
