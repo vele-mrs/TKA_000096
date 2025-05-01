@@ -72,14 +72,16 @@ if __name__ == "__main__":
     progress_print("end", os.path.basename(__file__))
 
 
-    # Notion Client
+    # WorkSpace
     ws = WorkSpace(
-        data = 1
-        )
+        mon_w = 3840,
+        mon_h = 2160,
+        grid  = 240
+    )
 
-    # APIキーを取得
-    ws.show()
-    advanceprint('INFO', None, f"Successfully get my integrate")
+    # エリアを描画
+    ws.draw_area()
+    advanceprint('INFO', None, f"Successfully draw_area")
 
 
 

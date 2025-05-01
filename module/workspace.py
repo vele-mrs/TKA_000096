@@ -258,18 +258,6 @@ class WorkSpace:
 
 
     ############################################################
-    # ワークスペース設定メソッド
-    # def set_workspace_area(self):
-    #     # (300, 300) ~ (600, 600) の位置に枠を描く
-    #     rect_window1 = patches.Rectangle((300, 300), 300, 300, linewidth=2, edgecolor='black', facecolor='none')
-    #     self.ax.add_patch(rect_window1)
-
-    #     # (300, 300) ~ (600, 600) の中心に "Window1" ラベルを追加
-    #     self.ax.text(450, 450, 'Window2', color='black', ha='center', va='center', fontsize=12)
-
-
-
-    ############################################################
     # (x1,y1),(x2,y2)から(x,y), width, highを生成するメソッド
     def make_rectangle(self):
         self.x = min(self.x1 , self.x2) + self.xp
@@ -295,7 +283,7 @@ class WorkSpace:
     def save_png(self):
 
         # タイトルを表示
-        plt.title(self.filename)
+        plt.title(f"{self.filename}.{self.filenum}")
 
         # グラフを保存
         filepath = set_filepath(["data", "WorkSpace"], self.filename, self.filenum, "png")
@@ -331,33 +319,16 @@ if __name__ == "__main__":
     progress_print("phase", f"{PHASE} - NotionClient : Get Database and convert csv and df")
     save_log(level="INFO", comment=f"{os.path.abspath(__file__)} -> PHASE{PHASE}")
 
-    # Notion Client
+    # WorkSpace
     ws = WorkSpace(
         mon_w = 3840,
         mon_h = 2160,
         grid  = 240
     )
 
-    # グラフエリアを初期化
-    # ws.clear_view_area()
-    # advanceprint('INFO', None, f"Successfully clear_view_area")
-
-    # グラフエリアを生成
-    # ws.set_view_area()
-    # advanceprint('INFO', None, f"Successfully set_view_area")
-
-    # モニタエリアを指定
-    # ws.set_monitor_area()
-    # advanceprint('INFO', None, f"Successfully set_monitor_area")
-
     # エリアを描画
     ws.draw_area()
     advanceprint('INFO', None, f"Successfully draw_area")
-
-
-    # ワークスペースを保存
-    # ws.save_workspace_png(1)
-    # advanceprint('INFO', None, f"Successfully save_workspace_png")
 
     # [INFO] - * - * - * - * - * - * - * - * - * - 
     progress_print("end", os.path.basename(__file__))
