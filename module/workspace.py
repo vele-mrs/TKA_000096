@@ -53,7 +53,10 @@ yyyymmdd_yesterday = ts.yyyymmdd_yesterday()
 ## ------------------------------------------------------------------------- ##
 ## 価格・評価額情報を取得・計算するクラス
 class WorkSpace:
-    def __init__(self):
+    def __init__(self, mon_w, mon_h, grid):
+        self.mon_w = mon_w
+        self.mon_h = mon_h
+        self.grid  = grid
         pass
 
 
@@ -71,16 +74,16 @@ class WorkSpace:
         fig, self.ax = plt.subplots(figsize=(16, 9))
 
         # 軸設定
-        self.ax.set_xlim(-3840, 3840)
-        self.ax.set_ylim(0, 2160)
+        self.ax.set_xlim(-self.mon_w, self.mon_w)
+        self.ax.set_ylim(0, self.mon_h)
         self.ax.set_aspect('equal')
 
         # 上下反転（画面っぽいY軸）
         self.ax.invert_yaxis()
 
         # グリッド設定（240ピクセル刻み）
-        x_ticks = list(range(-3840, 3840+1, 240))
-        y_ticks = list(range(0, 2160+1, 240))
+        x_ticks = list(range(-self.mon_w, self.mon_w+1, self.grid))
+        y_ticks = list(range(0, self.mon_h+1, self.grid))
 
         self.ax.set_xticks(x_ticks)
         self.ax.set_yticks(y_ticks)
@@ -95,22 +98,187 @@ class WorkSpace:
         # 軸のラベルを追加（オプション）
         self.ax.set_xlabel("X (pixels)")
         self.ax.set_ylabel("Y (pixels)")
-        plt.title("Custom Workspace Grid (3840x2160, 240px step)")
 
 
     ############################################################
-    # モニタ領域設定メソッド
-    def set_monitor_area(self):
+    # エリア描画メソッド
+    def draw_area(self):
 
-        # モニタ枠線を引く
-        rect = patches.Rectangle((0, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
+        self.filename = "restricted_area"
+        self.num = 0
+        self.read_csv()
+
+
+        print(self.df)
+  
+        for index, row in self.df.iterrows():
+            # advanceprint('INFO', ('row', row))
+
+            self.type = row['type']
+            self.name = row['name']
+            self.x1 = row['x1']
+            self.x2 = row['x2']
+            self.y1 = row['y1']
+            self.y2 = row['y2']
+            self.xp = row['xp']
+            self.yp = row['yp']
+            
+            # x,y,width,hightを生成
+            self.make_rectangle()
+
+            self.df.loc[index, 'x'] = int(self.x)
+            self.df.loc[index, 'y'] = int(self.y)
+            self.df.loc[index, 'w'] = int(self.w)
+            self.df.loc[index, 'h'] = int(self.h)
+
+            # モニタ枠線を描画する
+            if self.type=="frame":
+                self.set_frame()
+
+            # 禁止エリアを描画する
+            elif self.type=="redzone":
+                self.set_redzone()
+
+            # ウィンドウエリアを描画する
+            elif self.type=="window":
+                self.set_window()
+
+        print(self.df)
+
+        # データを保存する
+        self.write_csv()
+
+
+    ############################################################
+    # モニタ枠線設定メソッド
+    def set_frame(self):
+
+        linewidth   = 4
+        edgecolor   = 'black'
+        facecolor   = 'none'
+
+        # rectangle
+        rect = patches.Rectangle(
+            (self.x, self.y), 
+            self.w, 
+            self.h, 
+            linewidth=linewidth, 
+            edgecolor=edgecolor, 
+            facecolor=facecolor, 
+            )
         self.ax.add_patch(rect)
 
-        rect = patches.Rectangle((-3840, 0), 3840, 2160, linewidth=2, edgecolor='black', facecolor='none')
+    ############################################################
+    # 禁止エリア設定
+    def set_redzone(self):
+
+        linewidth   = 2
+        facecolor   = 'yellow'
+        alpha       = 0.5
+        hatch       = '/////'
+
+        # rectangle
+        rect = patches.Rectangle(
+            (self.x, self.y), 
+            self.w, 
+            self.h, 
+            linewidth=linewidth, 
+            facecolor=facecolor, 
+            alpha=alpha, 
+            hatch=hatch
+            )
         self.ax.add_patch(rect)
 
 
 
+    ############################################################
+    # ワークスペース設定
+
+    def set_window(self):
+
+        # エリアを透明度ありで塗りつぶし
+        linewidth   = 1
+        edgecolor   = 'black'
+        facecolor   = '#f2f6ff' 
+        alpha       = 0.2
+
+        rect = patches.Rectangle(
+            (self.x, self.y), 
+            self.w, 
+            self.h, 
+            linewidth=linewidth, 
+            edgecolor=edgecolor, 
+            facecolor=facecolor, 
+            alpha=alpha, 
+            )
+        self.ax.add_patch(rect)
+
+        # 枠線を透明度なしで表示
+        linewidth   = 1
+        edgecolor   = 'black'
+        facecolor   = 'none' 
+        alpha       = 1
+
+        rect = patches.Rectangle(
+            (self.x, self.y), 
+            self.w, 
+            self.h, 
+            linewidth=linewidth, 
+            edgecolor=edgecolor, 
+            facecolor=facecolor, 
+            alpha=alpha, 
+            )
+        self.ax.add_patch(rect)
+
+        # アプリケーション名を中央に表示
+        self.center_x = self.x + self.w / 2
+        self.center_y = self.y + self.h / 2
+        text = f"{self.name}\n\nx={self.x}\ny={self.y}\nwidth={self.w}\nhigh={self.h}"
+
+        self.ax.text(
+            self.center_x, 
+            self.center_y, 
+            text, 
+            color='black', 
+            ha='center', 
+            va='center', 
+            fontsize=12
+            )
+
+
+
+    ############################################################
+    # ワークスペース設定メソッド
+    # def set_workspace_area(self):
+    #     # (300, 300) ~ (600, 600) の位置に枠を描く
+    #     rect_window1 = patches.Rectangle((300, 300), 300, 300, linewidth=2, edgecolor='black', facecolor='none')
+    #     self.ax.add_patch(rect_window1)
+
+    #     # (300, 300) ~ (600, 600) の中心に "Window1" ラベルを追加
+    #     self.ax.text(450, 450, 'Window2', color='black', ha='center', va='center', fontsize=12)
+
+
+    ############################################################
+    # ワークスペース保存メソッド
+    def save_workspace_png(self, num):
+
+
+        plt.title(self.filename)
+
+        # グラフを保存
+        filepath = set_filepath(["data", "WorkSpace"], "workspace", num, "png")
+        plt.savefig(filepath, bbox_inches='tight', dpi=300)
+
+
+
+
+    ############################################################
+    # (x1,y1),(x2,y2)から(x,y), width, highを生成するメソッド
+    def make_rectangle(self):
+        self.x = min(self.x1 , self.x2) + self.xp
+        self.y = min(self.y1 , self.y2) + self.yp
+        self.w = abs(self.x2 - self.x1) - self.xp
+        self.h = abs(self.y2 - self.y1) - self.yp
 
     ############################################################
     # CSV Readメソッド
@@ -123,119 +291,6 @@ class WorkSpace:
     def write_csv(self):
         filepath = set_filepath(["data", "WorkSpace"], self.filename, self.num, "csv")
         self.df.to_csv(filepath, index=False)
-
-
-
-
-
-
-
-
-    ############################################################
-    # 禁止エリア設定メソッド
-    def set_restricted_area(self):
-
-        self.filename = "restricted_area"
-        self.num = 0
-        self.read_csv()
-        print(self.df)
-
-        self.df['x'] = 1
-        self.df['y'] = 1
-        self.df['width'] = 1
-        self.df['high'] = 1
-        self.write_csv()
-
-
-        
-
-        # エリアを設定
-        self.x1 = 100
-        self.y1 = 100
-        self.x2 = 500
-        self.y2 = 500
-        self.xpadding = 0
-        self.ypadding = 0
-
-        # x,y,width,hightを生成
-        self.make_rectangle()
-
-        print(self.x     )
-        print(self.y     )
-        print(self.width )
-        print(self.height)
-
-
-        self.set_restricted_area_single()
-
-    ############################################################
-    # 禁止エリア設定メソッド
-    def set_restricted_area_single(self):
-        # トラテープ部の設定
-        linewidth   = 2
-        facecolor   = 'yellow'
-        alpha       = 0.5
-        hatch       = '/////'
-
-        # rectangle
-        rect = patches.Rectangle(
-            (self.x, self.y), 
-            self.width, 
-            self.height, 
-            linewidth=linewidth, 
-            facecolor=facecolor, 
-            alpha=alpha, 
-            hatch=hatch
-            )
-        self.ax.add_patch(rect)
-
-
-    def set_restricted_area_single_old(self):
-        # (0, 0) ~ (3840, 240) の位置に枠を描き、トラテープパターンで塗りつぶし（太いスラッシュ模様）
-        rect = patches.Rectangle((0, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-        self.ax.add_patch(rect)
-
-        rect = patches.Rectangle((-3840, 0), 3840, 180, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-        self.ax.add_patch(rect)
-
-        rect = patches.Rectangle((0, 0), 70, 2160-50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-        self.ax.add_patch(rect)
-
-        rect = patches.Rectangle((0, 2160-50), 3840, 50, linewidth=2, facecolor='yellow', alpha=0.5, hatch='/////')
-        self.ax.add_patch(rect)
-
-
-    ############################################################
-    # (x1,y1),(x2,y2)から(x,y), width, highを生成するメソッド
-    def make_rectangle(self):
-        self.x      = min(self.x1 , self.x2) + self.xpadding
-        self.y      = min(self.y1 , self.y2) + self.ypadding
-        self.width  = abs(self.x2 - self.x1) - self.xpadding
-        self.height = abs(self.y2 - self.y1) - self.ypadding
-
-    ############################################################
-    # ワークスペースメソッド
-
-
-
-    ############################################################
-    # ワークスペース設定メソッド
-    def set_workspace_area(self):
-        # (300, 300) ~ (600, 600) の位置に枠を描く
-        rect_window1 = patches.Rectangle((300, 300), 300, 300, linewidth=2, edgecolor='black', facecolor='none')
-        self.ax.add_patch(rect_window1)
-
-        # (300, 300) ~ (600, 600) の中心に "Window1" ラベルを追加
-        self.ax.text(450, 450, 'Window2', color='black', ha='center', va='center', fontsize=12)
-
-
-    ############################################################
-    # ワークスペース保存メソッド
-    def save_workspace_png(self, num):
-
-        # グラフを保存
-        filepath = set_filepath(["data", "WorkSpace"], "workspace", num, "png")
-        plt.savefig(filepath, bbox_inches='tight', dpi=300)
 
 
 
@@ -252,6 +307,7 @@ class WorkSpace:
 ## ------------------------------------------------------------------------- ##
 ## Main
 if __name__ == "__main__":
+
     # [INFO]
     progress_print("start", os.path.abspath(__file__))
 
@@ -263,7 +319,11 @@ if __name__ == "__main__":
     save_log(level="INFO", comment=f"{os.path.abspath(__file__)} -> PHASE{PHASE}")
 
     # Notion Client
-    ws = WorkSpace()
+    ws = WorkSpace(
+        mon_w = 3840,
+        mon_h = 2160,
+        grid  = 240
+    )
 
     # グラフエリアを初期化
     ws.clear_view_area()
@@ -274,17 +334,13 @@ if __name__ == "__main__":
     advanceprint('INFO', None, f"Successfully set_view_area")
 
     # モニタエリアを指定
-    ws.set_monitor_area()
-    advanceprint('INFO', None, f"Successfully set_monitor_area")
+    # ws.set_monitor_area()
+    # advanceprint('INFO', None, f"Successfully set_monitor_area")
 
-    # 禁止エリアを指定
-    ws.set_restricted_area()
-    advanceprint('INFO', None, f"Successfully set_restricted_area")
+    # エリアを描画
+    ws.draw_area()
+    advanceprint('INFO', None, f"Successfully draw_area")
 
-
-    # ワークスペースを指定
-    ws.set_workspace_area()
-    advanceprint('INFO', None, f"Successfully set_workspace_area")
 
     # ワークスペースを保存
     ws.save_workspace_png(1)
