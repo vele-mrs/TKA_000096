@@ -73,16 +73,17 @@ class WorkSpace:
     # エリア描画メソッド
     def draw_area(self):
 
-
         # .csvファイルの読み出し
         for filename in os.listdir(r"data/Workspace"):
             if filename.endswith('.csv'):
                 self.filename, self.filenum = os.path.splitext(filename)[0].split('.')
+
+                # 描画エリアのクリア
+                plt.clf()
+
                 # 描画エリアの呼び出し
                 self.set_view_area()
 
-                # self.filename = "restricted_area"
-                # self.filenum = 0
                 self.load_csv()
                 advanceprint('INFO', None, f"Successfully Load {self.filename}.{self.filenum}.csv")
   
@@ -299,7 +300,7 @@ class WorkSpace:
         # グラフを保存
         filepath = set_filepath(["data", "WorkSpace"], self.filename, self.filenum, "png")
         plt.savefig(filepath, bbox_inches='tight', dpi=300)
-        plt.clf()   # 現在の図をクリア（figure全体を消去）
+        
 
 
 
@@ -338,8 +339,8 @@ if __name__ == "__main__":
     )
 
     # グラフエリアを初期化
-    ws.clear_view_area()
-    advanceprint('INFO', None, f"Successfully clear_view_area")
+    # ws.clear_view_area()
+    # advanceprint('INFO', None, f"Successfully clear_view_area")
 
     # グラフエリアを生成
     # ws.set_view_area()
