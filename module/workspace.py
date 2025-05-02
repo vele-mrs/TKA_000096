@@ -120,6 +120,8 @@ class WorkSpace:
                         self.set_window()
 
                 # print(self.df)
+                for col in ['x', 'y', 'w', 'h']:
+                    self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0).astype(int)
 
                 # データを保存する
                 self.save_csv()
